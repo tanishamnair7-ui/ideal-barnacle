@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id                 String            @id @default(uuid())
+  name               String
+  ageband            String?
+  genderIdentity     String?
+  openToDate         String?
+  consentGiven       Boolean           @default(false)
+  allowSensitive     Boolean           @default(false)
+  completionStatus   String            @default("in_progress") // "in_progress", "completed"
+  lastSeenQuestionId String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  responses          Response[]
+  computedScores     ComputedScores?
+}
+
+model Question {
+  id           String     @id @default(uuid())
+  sectionId    String     // "basics", "nonneg", "values", "attachment", "personality", "money"
+  instrument   String     // "BASICS", "NONNEG", "PVQ", "ECRS", "TIPI", "MAS"
+  orderIndex   Int        // Order within section
+  prompt       String     // The question text (placeholder for copyrighted scales)
+  responseType String     // "single_choice", "likert", "text"
+  options      String?    // JSON array for single_choice options
+  scaleMin     Int?       // For likert scales
+  scaleMax     Int?       // For likert scales
+  scaleLabels  String?    // JSON object with labels for scale anchors
+  required     Boolean    @default(true)
+  responses    Response[]
+
+  @@unique([instrument, orderIndex])
+}
+
+model Response {
+  id         String   @id @default(uuid())
+  profileId  String
+  questionId String
+  value      String   // Can store string or number as string
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, questionId])
+}
+
+model ScoringKey {
+  id         String  @id @default(uuid())
+  instrument String  // "PVQ", "ECRS", "TIPI", "MAS"
+  itemId     String  // The question orderIndex or unique identifier
+  subscale   String  // The subscale/factor this item belongs to
+  reverse    Boolean @default(false)
+  weight     Float?  @default(1.0)
+
+  @@unique([instrument, itemId, subscale])
+}
+
+model ComputedScores {
+  id              String   @id @default(uuid())
+  profileId       String   @unique
+  // Values subscales (stored as JSON)
+  valuesSubscales String   // JSON: { "selfDirection": 4.5, "benevolence": 5.2, ... }
+  valuesCentered  String   // JSON: { "selfDirection": 0.3, "benevolence": 1.0, ... }
+  // Attachment
+  attachmentAnxiety   Float?
+  attachmentAvoidance Float?
+  // TIPI Big Five
+  extraversion        Float?
+  agreeableness       Float?
+  conscientiousness   Float?
+  emotionalStability  Float?
+  openness            Float?
+  // Money factors (stored as JSON)
+  moneyFactors String   // JSON: { "security": 3.2, "status": 2.1, ... }
+  computedAt   DateTime @default(now())
+  profile      Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
