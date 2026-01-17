@@ -27,12 +27,23 @@ A privacy-first web application for creating comprehensive relationship compatib
 5. **Personality** (10 items): TIPI placeholder items measuring Big Five traits
 6. **Money Mindset** (29 items, optional): MAS placeholder items measuring financial attitudes
 
+## Deployment Options
+
+### 🏠 Local Mode (Privacy-First - Recommended)
+Run on your own machine with PostgreSQL or SQLite for complete privacy. All data stays local.
+
+### ☁️ Vercel Demo Mode
+Deploy to Vercel for demonstration purposes. Uses cloud database - **not privacy-first**.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed Vercel deployment instructions.
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS 4
-- **Database**: SQLite with Prisma ORM
+- **Database**: PostgreSQL (Vercel) or SQLite (local)
+- **ORM**: Prisma
 - **Charts**: Recharts
 - **Runtime**: Node.js
 
@@ -41,32 +52,103 @@ A privacy-first web application for creating comprehensive relationship compatib
 ### Prerequisites
 
 - Node.js 18+ and npm
+- PostgreSQL (for current setup) or SQLite (see below for SQLite setup)
 
-### Installation
+### Quick Start with PostgreSQL
 
-1. Install dependencies:
-```bash
-npm install
-```
+1. **Install and start PostgreSQL:**
+   ```bash
+   # macOS with Homebrew
+   brew install postgresql@15
+   brew services start postgresql@15
 
-2. Set up the database and seed questions:
-```bash
-npm run seed
-```
+   # Ubuntu/Debian
+   sudo apt install postgresql
+   sudo systemctl start postgresql
 
-3. Start the development server:
-```bash
-npm run dev
-```
+   # Or use Docker
+   docker run --name relationship-db -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:15
+   ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+2. **Create database:**
+   ```bash
+   createdb relationship_profile
+   ```
+
+3. **Set up environment:**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and add:
+   ```
+   DATABASE_URL="postgresql://postgres:password@localhost:5432/relationship_profile?schema=public"
+   ```
+   *(Adjust username/password as needed)*
+
+4. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+5. **Push schema and seed database:**
+   ```bash
+   npm run prisma:push
+   npm run seed
+   ```
+
+6. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+7. **Open [http://localhost:3000](http://localhost:3000)**
+
+### Alternative: Quick Start with SQLite (Simpler for Local Dev)
+
+If you prefer SQLite for local development:
+
+1. **Update `prisma/schema.prisma`:**
+   ```prisma
+   datasource db {
+     provider = "sqlite"
+     url      = env("DATABASE_URL")
+   }
+   ```
+
+2. **Create `.env`:**
+   ```
+   DATABASE_URL="file:./prisma/dev.db"
+   ```
+
+3. **Install, setup, and run:**
+   ```bash
+   npm install
+   npm run prisma:push
+   npm run seed
+   npm run dev
+   ```
 
 ### Building for Production
 
+**Self-hosted:**
 ```bash
 npm run build
 npm start
 ```
+
+**Deploy to Vercel:**
+
+See the comprehensive [DEPLOYMENT.md](DEPLOYMENT.md) guide for step-by-step Vercel deployment instructions.
+
+Quick deploy:
+1. Push code to GitHub
+2. Import repository in Vercel
+3. Add Vercel Postgres database
+4. Deploy
+5. Seed the database: `vercel env pull .env.local && npm run seed`
+
+⚠️ **Note**: Vercel deployment uses cloud storage and is for demonstration only. For privacy-first use, run locally.
 
 ## Project Structure
 

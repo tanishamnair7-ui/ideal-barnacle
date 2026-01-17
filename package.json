@@ -4,12 +4,14 @@
   "description": "Relationship Compatibility Assessment App",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build"
   },
   "repository": {
     "type": "git",
